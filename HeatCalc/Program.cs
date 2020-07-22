@@ -10,6 +10,7 @@ namespace HeatCalc
     {
         static void Main(string[] args)
         {
+
         }
     }
 }
