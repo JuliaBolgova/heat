@@ -35,13 +35,13 @@ namespace HeatCalc
             
 
             double ro1 = 7800; // Плотность 1 материала
-            double ro2 = 7800; // Плотность 2 материала
+            double ro2 = 5000; // Плотность 2 материала
             double lyamb1 = 13; // Теплопроводность 1 материала
-            double lyamb2 = 13; // Теплопроволность 2 материала
+            double lyamb2 = 10; // Теплопроволность 2 материала
             double C1 = 380; // Теплоемкость 1 материала
-            double C2 = 380; // Теплоемкость 2 материала
-            double a1 = 1;// lyamb1 / (C1 * ro1); // Коэффициент температуропроводности 1 материала
-            double a2 = 1;// lyamb2 / (C2 * ro2); // Коэффициент температуропроводности 2 материала
+            double C2 = 300; // Теплоемкость 2 материала
+            double a1 = lyamb1 / (C1 * ro1); // Коэффициент температуропроводности 1 материала
+            double a2 = lyamb2 / (C2 * ro2); // Коэффициент температуропроводности 2 материала
             double tau1 = r * (h * h) / a1;
             double tau2 = r * (h * h) / a2;
             double tau = Math.Min(tau1, tau2); // Шаг по времени
@@ -85,7 +85,7 @@ namespace HeatCalc
                     TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i - 1] - 2 * TOld[i] + TOld[i + 1]); // Температура на 1 материале
                 }
 
-               // TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
+              // TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
 
                 for (int i = K + 1; i < N; i++)
                 {
