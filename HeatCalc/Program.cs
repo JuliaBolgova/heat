@@ -17,25 +17,20 @@ namespace HeatCalc
             string head1 = "time" + "     " + "eps";
             FileTimeEps.WriteLine(head1);
             System.IO.StreamWriter FileTxEnd = new StreamWriter("T(x)End" + ".txt");
-            string head2 = "time" + "     " + "eps";
+            string head2 = "X[i]" + "     " + "T(x)";
             FileTxEnd.WriteLine(head2);
 
-
-            double eps = 0.00001; // погрешность
             double r = 0.3; // число Куранта
             double time = 0; // старт времени
-            double dT = 1; // разница температуры между старым и новым слоем по времени
-                           // (нужно только вначале, чтобы не было по умолчанию 0)
 
             int N = 20; // Количество разбиений
             int K = 10; // Место соединения двух материалов
 
-            double l1 = 0.5; // Длина 1 материала
-            double l2 = 0.5; // Длина 2 материала
+            double l1 = 0.01; // Длина 1 материала
+            double l2 = 0.01; // Длина 2 материала
             double L = l1 + l2; // Общая длина материалов
             double h = L / N; // Шаг по пространству
-            
-            
+            double Q; // Тепловой поток
 
             double ro1 = 7800; // Плотность 1 материала
             double ro2 = 5000; // Плотность 2 материала
@@ -47,10 +42,9 @@ namespace HeatCalc
             double a2 = lyamb2 / (C2 * ro2); // Коэффициент температуропроводности 2 материала
             double tau1 = r * (h * h) / a1;
             double tau2 = r * (h * h) / a2;
-            double tau = Math.Min(tau1, tau2); // Шаг по времени
+            double tau =  Math.Min(tau1, tau2); // Шаг по времени
             double alphaAir = 5; // Коэффициент теплоотдачи
 
-            //double TLeft = 100; // Температура на левой границе 1 материала - для 1 ГУ
             double Tl1 = 100; // Начальная температура 1 материала
             double Tl2 = 25; // Начальная температура 2 материала
             double T_air = 25;
@@ -63,8 +57,6 @@ namespace HeatCalc
             {
                 X[i] = i * h; //  Разбиение оси Х на шаги
             }
-
-            //TOld[0] = TLeft; // Первое граничное условие (постоянство температуры)
 
             for (int i = 0; i <= N; i++)
             {
@@ -79,16 +71,22 @@ namespace HeatCalc
                 FileTx.WriteLine(X_T);
             }
 
-            while (dT > eps)
+            while (time <= 100)
             {
-                time += tau; // увеличиваем время на tau
+                if (TOld[0] >= 97 && TOld[0] <= 103)
+                    Q = 0;
+                if (TOld[0] < 97)
+                    Q = 5;
+                else Q = 0;
 
-                //TNew[0] = TOld[0]; // 1 граничное условие (постоянство температуры слева)
-                TNew[0] = TOld[1] - (alphaAir * h) / lyamb1 * (TOld[0] - T_air)  ; // 3 граничное условие (остывание 1 материала)
+                time += tau; // увеличиваем время на tau
+               
+                TNew[0] = TOld[1] + Q * h / lyamb1 ; // 2 ГУ ( задание теплового потока Q )
+              
 
                 for (int i = 1; i < K; i++)
                 {
-                    TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i - 1] - 2 * TOld[i] + TOld[i + 1]); // Температура на 1 материале
+                    TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 1 материале
                 }
 
                 TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
@@ -96,37 +94,40 @@ namespace HeatCalc
                
                 for (int i = K + 1; i < N; i++)
                 {
-                    TNew[i] = TOld[i] + a2 * tau / (h * h) * (TOld[i - 1] - 2 * TOld[i] + TOld[i + 1]); // Температура на 2 материале
+                    TNew[i] = TOld[i] + a2 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 2 материале
                 }
-                double Q = 0;
-                // TNew[N] = TNew[N - 1]; // Условие симметрии на конце материала 2
-                TNew[N] = Q * h + TNew[N - 1];
 
-                dT = 0;
-                for(int i = 0; i <= N; i++)
-                {
-                    dT = dT + (TNew[i] - TOld[i]) * (TNew[i] - TOld[i]);
-                }
-                dT = Math.Sqrt(dT) / N;
-                    //dT = Math.Abs(TOld[K] - TNew[K]);
+                TNew[N] = TNew[N - 1]- (alphaAir * h / lyamb2) * T_air; // 3 граничное условие (остывание 1 материала)
+                
+
+                #region
+                // TNew[N] = TNew[N - 1]; // Условие симметрии на конце материала 2
+
+
+                //    dT = 0;
+                //for(int i = 0; i <= N; i++)
+                //{
+                //    dT = dT + (TNew[i] - TOld[i]) * (TNew[i] - TOld[i]);
+                //}
+                //dT = Math.Sqrt(dT) / N;
+                //    //dT = Math.Abs(TOld[K] - TNew[K]);
+                #endregion 
 
                 for (int i = 0; i <= N; i++)
                 {
                     TOld[i] = TNew[i];
-
                     string X_T = X[i].ToString().Replace(",", ".") + "\t" + "    " + TNew[i].ToString().Replace(",", ".") + "\t";
                     FileTx.WriteLine(X_T);
-                   // Console.WriteLine(X[i].ToString().Replace(",", ".") + "\t" + "    " + TNew[i].ToString().Replace(",", ".") + "\t");
-
                 }
-                Console.WriteLine(time.ToString().Replace(",", ".") + "\t" + "    " + dT.ToString().Replace(",", ".") + "\t");
-                string Time_eps = time.ToString().Replace(",", ".") + "\t" + "    " + dT.ToString().Replace(",", ".") + "\t";
-                FileTimeEps.WriteLine(Time_eps);
+
+                FileTx.WriteLine("   ");
+                FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
             }
             for (int i = 0; i <= N; i++)
             {
                 string X_TEnd = X[i].ToString().Replace(",", ".") + "\t" + "    " + TNew[i].ToString().Replace(",", ".") + "\t";
                 FileTxEnd.WriteLine(X_TEnd);
+                Console.WriteLine(time + "    " + X[i].ToString().Replace(",", ".") + "\t" + "    " + TNew[i].ToString().Replace(",", ".") + "\t");
             }
             FileTx.Close();
             FileTxEnd.Close();
