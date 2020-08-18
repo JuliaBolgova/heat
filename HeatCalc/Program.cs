@@ -9,7 +9,6 @@ namespace HeatCalc
     {
         static void Main(string[] args)
         {
-
             System.IO.StreamWriter FileTx = new StreamWriter("T(x)" + ".txt");
             string head = "x[i]" + "             " + "T_new[i]";
             FileTx.WriteLine(head);
