@@ -30,7 +30,7 @@ namespace HeatCalc
             double l2 = 0.01; // Длина 2 материала
             double L = l1 + l2; // Общая длина материалов
             double h = L / N; // Шаг по пространству
-            double Q; // Тепловой поток
+            double Q = 0;  // Тепловой поток
 
             double ro1 = 8933; // Плотность 1 материала
             double ro2 = 8933; // Плотность 2 материала
@@ -78,33 +78,10 @@ namespace HeatCalc
 
             while (time <= 100)
             {
-                if (TOld[0] >= 97 && TOld[0] <= 103)
-                {
+                if (TOld[0] >= 97 && TOld[0] <= 103 || TOld[0] >= 103)
                     Q = 0;
-                    time += tau; // увеличиваем время на tau
-                    FileTx.WriteLine("   ");
-                    FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
 
-                    TNew[0] = TOld[1] + Q * h / lyamb1; // 2 ГУ ( задание теплового потока Q )
-
-                    for (int i = 1; i < K; i++)
-                    {
-                        TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 1 материале
-                    }
-
-                    TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
-
-
-                    for (int i = K + 1; i < N; i++)
-                    {
-                        TNew[i] = TOld[i] + a2 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 2 материале
-                    }
-
-                    TNew[N] = TNew[N - 1] - (alphaAir * h / lyamb2) * T_air; // 3 граничное условие (остывание 1 материала)
-
-                }
-
-                if (TOld[0] < 97)
+                else
                 {
                     while (TOld[0] < 103 && time <= 100)
                     {
@@ -112,8 +89,6 @@ namespace HeatCalc
                         time += tau; // увеличиваем время на tau
                         FileTx.WriteLine("   ");
                         FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
-
-
 
                         TNew[0] = TOld[0] + Q * h / lyamb1; // 2 ГУ ( задание теплового потока Q )
 
@@ -123,7 +98,6 @@ namespace HeatCalc
                         }
 
                         TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
-
 
                         for (int i = K + 1; i < N; i++)
                         {
@@ -140,30 +114,26 @@ namespace HeatCalc
                         }
                     }
                 }
-                if (TOld[0] >= 103)
+
+                time += tau; // увеличиваем время на tau
+                FileTx.WriteLine("   ");
+                FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
+
+                TNew[0] = TOld[1] + Q * h / lyamb1; // 2 ГУ ( задание теплового потока Q )
+
+                for (int i = 1; i < K; i++)
                 {
-                    Q = 0;
-                    time += tau; // увеличиваем время на tau
-                    FileTx.WriteLine("   ");
-                    FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
-
-                    TNew[0] = TOld[1] + Q * h / lyamb1; // 2 ГУ ( задание теплового потока Q )
-
-                    for (int i = 1; i < K; i++)
-                    {
-                        TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 1 материале
-                    }
-
-                    TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
-
-
-                    for (int i = K + 1; i < N; i++)
-                    {
-                        TNew[i] = TOld[i] + a2 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 2 материале
-                    }
-
-                    TNew[N] = TNew[N - 1] - (alphaAir * h / lyamb2) * T_air; // 3 граничное условие (остывание 1 материала)
+                    TNew[i] = TOld[i] + a1 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 1 материале
                 }
+
+                TNew[K] = (lyamb2 * TOld[K + 1] + lyamb1 * TOld[K - 1]) / (lyamb2 + lyamb1); // Температура на соединении
+
+                for (int i = K + 1; i < N; i++)
+                {
+                    TNew[i] = TOld[i] + a2 * tau / (h * h) * (TOld[i + 1] - 2 * TOld[i] + TOld[i - 1]); // Температура на 2 материале
+                }
+
+                TNew[N] = TNew[N - 1] - (alphaAir * h / lyamb2) * T_air; // 3 граничное условие (остывание 1 материала)
 
                 for (int i = 0; i <= N; i++)
                 {
@@ -171,8 +141,8 @@ namespace HeatCalc
                     string X_T = Math.Round(X[i], 4).ToString().Replace(",", ".") + "\t" + "           " + TOld[i].ToString().Replace(",", ".") + "\t";
                     FileTx.WriteLine(X_T);
                 }
-
             }
+
             for (int i = 0; i <= N; i++)
             {
                 string X_TEnd = X[i].ToString().Replace(",", ".") + "\t" + "    " + TNew[i].ToString().Replace(",", ".") + "\t";
