@@ -22,8 +22,8 @@ namespace HeatCalc
             double r = 0.3; // число Куранта
             double time = 0; // старт времени
 
-            int N = 6; // Количество разбиений
-            int K = 3; // Место соединения двух материалов
+            int N = 30; // Количество разбиений
+            int K = 15; // Место соединения двух материалов
 
             double l1 = 0.01; // Длина 1 материала
             double l2 = 0.01; // Длина 2 материала
@@ -75,16 +75,16 @@ namespace HeatCalc
                 FileTx.WriteLine(X_T);
             }
 
-            while (time <= 100)
+            while (time <= 50)
             {
                 if (TOld[0] >= 97 && TOld[0] <= 103 || TOld[0] >= 103)
                     Q = 0;
 
                 else
                 {
-                    while (TOld[0] < 103 && time <= 100)
+                    while (TOld[0] < 103 && time <= 50)
                     {
-                        Q = 25000;
+                        Q = 25;
                         time += tau; // увеличиваем время на tau
                         FileTx.WriteLine("   ");
                         FileTx.WriteLine("   " + "Пройденное время: " + time + "   ");
